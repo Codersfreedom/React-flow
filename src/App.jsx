@@ -2,56 +2,85 @@ import { addEdge, applyEdgeChanges, applyNodeChanges, ReactFlow } from '@xyflow/
 
 import '@xyflow/react/dist/style.css';
 import { useCallback, useState } from 'react';
+import FileNode from './components/ImageNode';
+import OutputNode from './components/OutputNode';
+import useNodeStore from './store/useNodeStore';
+import TextNode from './components/TextNode';
+import TextNodeOutput from './components/TextNodeOutput';
+import DropDown from './components/DropDown';
+import VideoNode from './components/VideoNode';
+import ImageNode from './components/ImageNode';
+
+
+const nodeTypes = { fileNode: FileNode, imageoutputNode: ImageNode, videooutputNode: VideoNode, outputNode: OutputNode, textNode: TextNode, textOutputNode: TextNodeOutput, dropdownNode: DropDown }
 
 function App() {
 
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
-  const [nodeId, setNodeId] = useState(1);
+  const [nodeType, setNodeType] = useState("default");
 
+  const { createNode, nodes, setNodes, edges, setEdges } = useNodeStore();
 
   const handleAddNode = () => {
-    const newNode = {
-      id: nodeId.toString(),
-      data: { label: `Node ${nodeId}` },
-      position: { x: Math.random() * 250, y: Math.random() * 250 },
-    }
-
-    setNodes((prev) => [...prev, newNode]);
-    setNodeId((prev) => prev + 1);
+    createNode(nodeType);
   }
 
+
+
   const onChnageNodes = useCallback(
-    (change) => setNodes((prev) => applyNodeChanges(change, prev))
-    , [])
+    (change) => {
+      const updatedNodes = applyNodeChanges(change, nodes);
+      setNodes(updatedNodes);
+    }
+    , [nodes])
 
   const onEdgeChnage = useCallback(
-    (change) => setEdges((prev) => applyEdgeChanges(change, prev))
-    , [])
+    (change) => {
+      const updatedEdges = applyEdgeChanges(change, edges);
+      setEdges(updatedEdges);
+    }
+    , [edges])
 
   const onEdgeConnect = useCallback(
-    (change) => setEdges((prev) => addEdge(change, prev)), []
-  )
+    (change) => {
+      const updatedEges = addEdge(change, edges);
+      setEdges(updatedEges);
+    }, [edges])
+
   return (
+
+
+
     <div
       style={{ width: '100vw', height: '100vh', color: "black" }}
     >
 
-      <div className=' max-w-full float-end m-5  '>
+      <div className=' max-w-full float-end m-5 space-x-2  '>
+        <select
+          className='bg-gray-600 text-white h-10 w-40 rounded-xl p-2'
+          onChange={(e) => setNodeType(e.target.value)}
+        >
+          <option value="default">Select Node Type</option>
+          <option value="dropdownNode">Dropdown Node</option>
+          <option value="default">Default Node</option>
+
+        </select>
         <button
           className='text-white'
           onClick={handleAddNode}
         >
           Add</button>
       </div>
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={nodeTypes}
         onNodesChange={onChnageNodes}
         onEdgesChange={onEdgeChnage}
         onConnect={onEdgeConnect}
       />
     </div>
+
   )
 }
 
